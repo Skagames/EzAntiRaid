@@ -1,12 +1,19 @@
 import discord
 from discord.commands import slash_command
 from discord.ext import commands, tasks
+from dotenv import find_dotenv, load_dotenv
+from os import getenv
+
+from other_files import sync as sync_command
 
 __version__ = '0.0.1a'
 
 intents = discord.Intents.default()
 intents.members = True
 bot = discord.Bot(debug_guilds=[739630717159473192,792217056644694057],intents=intents)
+
+# loads the environment variables from .env
+load_dotenv(find_dotenv())
 
 # bot events
 @bot.event
@@ -29,8 +36,8 @@ async def ping(ctx):  # Passing a default value makes the argument optional
     await ctx.respond(f"EzAntiRaid V{__version__}: ({round((bot.latency * 1000))}ms)")
 
 @bot.slash_command()
-async def test(ctx, user):
-    ...
+async def sync(ctx):
+    await sync_command.sync(ctx)
 
 # tasks
 @tasks.loop(hours=24.0) #this task will upload the database as a backup every 24 hours
@@ -48,4 +55,4 @@ async def before_upload_db():
 upload_db.start()
 
 # run bot
-bot.run("") #! uncovered API key
+bot.run(getenv('bot_key'))
