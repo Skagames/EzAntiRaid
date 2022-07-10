@@ -5,6 +5,7 @@ from dotenv import find_dotenv, load_dotenv
 from os import getenv
 
 from other_files import sync as sync_command
+from other_files import auto_raid
 
 __version__ = '0.0.1a'
 
@@ -23,7 +24,8 @@ async def on_ready():
 
 @bot.event
 async def on_member_join(member):
-    ...
+    ar =  auto_raid.raidChecker(member)
+    await ar.raidcheck()
 
 @bot.event
 async def on_member_remove(member):

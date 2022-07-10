@@ -23,6 +23,8 @@ class raidChecker():
         # sorted members list
         self.sorted_members = None
 
+        #set the current time
+        curtime = ...
 
     async def sync(self) -> None:
         # get a list of all members in the server
@@ -39,14 +41,14 @@ class raidChecker():
 
     async def get_timespan_absolute(self, begin_time: int, end_time: int) -> list:
         if self.sorted_members is None:
-            await self.sync
+            await self.sync()
         
         return [member for member in self.sorted_members if begin_time < member['joined_at'] < end_time]
 
 
     async def get_timespan_relative(self, seconds_in_past):
         if self.sorted_members is None:
-            await self.sync
+            await self.sync()
 
         end_time = time.time()
         begin_time = end_time - seconds_in_past
@@ -60,18 +62,26 @@ class raidChecker():
         180 / (total_time_between_first_and_last_join / total_amount_of_users)
         """
         # get the average join rate of the server in users / 180 seconds
-        sorted_members = await self.get_timespan_absolute(time.time() - 7890000, time.time() - 180) # we get the average of the past 3 months
-        firstjoin, lastjoin = sorted_members[0]['joined_at'], sorted_members[-1]['joined_at']
+        curtime = time.time()
+        sorted_members = await self.get_timespan_absolute(curtime - 7890000, curtime - 180) # we get the average of the past 3 months
+        firstjoin = sorted_members[0]['joined_at']
+        lastjoin = sorted_members[-1]['joined_at']
+        
         delta = lastjoin - firstjoin
         total_users = len(sorted_members)
         self.average_users = 180 / (delta / total_users)
         
         # get the average join rate of the past 3 minutes
         sorted_members = await self.get_timespan_relative(180) # get the last 3 minutes
-        firstjoin, lastjoin = sorted_members[0]['joined_at'], sorted_members[-1]['joined_at']
-        delta = lastjoin - firstjoin
         total_users = len(sorted_members)
-        self.average_users_last_3_minutes = 180 / (delta / total_users)
+        print(total_users)
+        print(sorted_members)
+        if total_users == 0:
+            self.average_users_last_3_minutes = 0
+        else:
+            firstjoin = sorted_members[0]['joined_at']
+            lastjoin = sorted_members[-1]['joined_at']
+            self.average_users_last_3_minutes = 180 / (180 / total_users)
 
         """
         The main problem occurs when the average join rate in the past 3 minutes is significantly higher
@@ -84,10 +94,13 @@ class raidChecker():
         gets a bigger influx of users in a moment, if the join factor is smaller
         than 25, but bigger than 12.5, the user will be kicked from the server
         """
-
+        print(self.average_users)
+        print(self.average_users_last_3_minutes)
+        '''
         # check if the join over past 3 minutes exceeds the treshold
         if self.average_users_last_3_minutes > 25 * self.average_users:  # 20 being the threshold
             # ban the user himself
             await self.member.ban(delete_message_days=7, reason="Banned by EzAntiRaid (automatic)")
         elif self.average_users_last_3_minutes > 12.5 * self.average_users:
             await self.member.kick(reason='Kicked by EzAntiRaid (automatic)')
+        '''
