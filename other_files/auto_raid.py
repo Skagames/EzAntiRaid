@@ -93,12 +93,16 @@ class raidChecker():
         a safety net is in place for users that join after f.ex. a big announcement was made that
         gets a bigger influx of users in a moment, if the join factor is smaller
         than 25, but bigger than 12.5, the user will be kicked from the server
+
+        on low join servers the average join rate could be so low that one join already sets of the
+        alarm, for this we put a second safety net in place that the average join in the past 3 minutes
+        needs to be more than 5 (Meaning that backpropagation needs to be in place)
         """
         print(self.average_users)
         print(self.average_users_last_3_minutes)
         '''
         # check if the join over past 3 minutes exceeds the treshold
-        if self.average_users_last_3_minutes > 25 * self.average_users:  # 20 being the threshold
+        if self.average_users_last_3_minutes > 25 * self.average_users and self.average_users_last_3_minutes > 5:  # 20 being the threshold
             # ban the user himself
             await self.member.ban(delete_message_days=7, reason="Banned by EzAntiRaid (automatic)")
         elif self.average_users_last_3_minutes > 12.5 * self.average_users:
